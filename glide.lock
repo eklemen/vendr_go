@@ -1,0 +1,88 @@
+hash: 5ac1432dc5e6e22fcc2c4beb1a018dc8a8875b8f894d44905cdcb762aec6d1bd
+updated: 2018-04-19T22:01:46.538828-04:00
+imports:
+- name: github.com/clbanning/x2j
+  version: 5e605d46809c441eb0e565867b63f7d80c9140c2
+- name: github.com/dgrijalva/jwt-go
+  version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
+- name: github.com/jinzhu/gorm
+  version: 6ed508ec6a4ecb3531899a69cbc746ccf65a4166
+  subpackages:
+  - dialects/postgres
+- name: github.com/jinzhu/inflection
+  version: 04140366298a54a039076d798123ffa108fff46c
+- name: github.com/labstack/echo
+  version: 6d227dfea4d2e52cb76856120b3c17f758139b4e
+  subpackages:
+  - middleware
+- name: github.com/labstack/gommon
+  version: 3bc2d333a4c30531c47051369043bcabd62ff4c0
+  subpackages:
+  - bytes
+  - color
+  - log
+  - random
+- name: github.com/lib/pq
+  version: d34b9ff171c21ad295489235aec8b6626023cd04
+  subpackages:
+  - hstore
+  - oid
+- name: github.com/mattn/go-colorable
+  version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
+- name: github.com/mattn/go-isatty
+  version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
+- name: github.com/satori/go.uuid
+  version: f58768cc1a7a7e77a3bd49e98cdd21419399b6a3
+- name: github.com/stretchr/codecs
+  version: 04a5b1e1910de7aaf00e1d4419d2508247fba1b4
+  subpackages:
+  - bson
+  - constants
+  - csv
+  - json
+  - jsonp
+  - msgpack
+  - services
+  - xml
+- name: github.com/stretchr/gomniauth
+  version: 4b6c822be2eb64551618722ff80cecde4d63d9be
+  subpackages:
+  - '...'
+  - common
+  - oauth2
+  - providers/instagram
+- name: github.com/stretchr/objx
+  version: 8a3f7159479fbc75b30357fbc48f380b7320f08e
+- name: github.com/stretchr/signature
+  version: 168b2a1e1b562bf381d47471e31f5979a2a51cd5
+- name: github.com/stretchr/stew
+  version: 80ef0842b48b329a6120607c817a85aff5a2ec71
+  subpackages:
+  - strings
+- name: github.com/stretchr/tracer
+  version: 66d3696bba973e1697f7d68413b3f19c6d6e2a7c
+- name: github.com/subosito/gotenv
+  version: 009e1f9581dc712aba5682a279dee155ca3eeded
+- name: github.com/ugorji/go
+  version: f3cacc17c85ecb7f1b6a9e373ee85d1480919868
+  subpackages:
+  - codec
+- name: github.com/valyala/bytebufferpool
+  version: e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7
+- name: github.com/valyala/fasttemplate
+  version: dcecefd839c4193db0d35b88ec65b4c12d360ab0
+- name: golang.org/x/crypto
+  version: d6449816ce06963d9d136eee5a56fca5b0616e7e
+  subpackages:
+  - acme
+  - acme/autocert
+- name: golang.org/x/sys
+  version: a2a45943ae67364d56c5d7d62dee78cff16c8dc8
+  subpackages:
+  - unix
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
+testImports: []
