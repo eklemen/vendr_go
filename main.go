@@ -33,7 +33,7 @@ func main() {
 		fmt.Println("DB Connected...")
 	}
 	defer db.Close()
-
+	controllers.DB = db
 	// Migrate the schema
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Event{})

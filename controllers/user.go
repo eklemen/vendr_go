@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var db *gorm.DB
+var DB *gorm.DB
 
 func CreateUser(c echo.Context) error {
 	//u := new(User) equivalent to line below
@@ -22,15 +22,14 @@ func CreateUser(c echo.Context) error {
 	if err := c.Bind(&u); err != nil {
 		return err
 	}
-	db.Create(&u)
+	DB.Create(&u)
 	return c.JSON(http.StatusCreated, &u)
 
 }
 
 func GetAllUsers(c echo.Context) error {
 	var users []models.User
-	fmt.Println(db)
-	res := db.Find(&users)
+	res := DB.Find(&users)
 	fmt.Println(res.Value)
 	if res.Error != nil {
 		return res.Error
@@ -45,20 +44,20 @@ func UpdateUser(c echo.Context) error {
 	if err := c.Bind(u); err != nil {
 		return err
 	}
-	db.Model(&u).Updates(&u)
+	DB.Model(&u).Updates(&u)
 	return c.JSON(http.StatusOK, &u)
 }
 
 func DeleteUser(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 	u := &models.User{ID: id}
-	db.Delete(&u)
+	DB.Delete(&u)
 	return c.NoContent(http.StatusNoContent)
 }
 
 func GetUser(c echo.Context) error {
 	var user models.User
-	res := db.Preload("CreatedEvents").First(&user, c.Param("id"))
+	res := DB.Preload("CreatedEvents").First(&user, c.Param("id"))
 
 	if res.RecordNotFound() {
 		return c.JSON(http.StatusNotFound, "Record not found")
