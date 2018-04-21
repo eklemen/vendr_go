@@ -12,6 +12,7 @@ import:
   version: ^1.2.0
 - package: github.com/subosito/gotenv
   version: ^1.1.0
-- package: github.com/stretchr/gomniauth
-  subpackages:
-  - '...'
+- package: github.com/markbates/goth
+  version: ^1.45.5
+- package: github.com/gorilla/sessions
+  version: ^1.1.0

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
@@ -30,7 +29,6 @@ func CreateUser(c echo.Context) error {
 func GetAllUsers(c echo.Context) error {
 	var users []models.User
 	res := DB.Find(&users)
-	fmt.Println(res.Value)
 	if res.Error != nil {
 		return res.Error
 	}
