@@ -4,6 +4,7 @@ import (
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
+	"github.com/markbates/goth"
 	"github.com/satori/go.uuid"
 	"net/http"
 	"strconv"
@@ -11,16 +12,24 @@ import (
 
 var DB *gorm.DB
 
-func CreateUser(c echo.Context) error {
+func CreateUser(c echo.Context, user goth.User) error {
 	//u := new(User) equivalent to line below
 	u := models.NewUser()
 	id := uuid.NewV4()
 	u.Uuid = id
+	// TODO: make an interface for this?
+	u.Token = user.AccessToken
+	u.Email = user.Email
+	u.IgID = user.UserID
+	u.IgUsername = user.NickName
+	u.IgFullName = user.FirstName + " " + user.LastName
+	u.IgToken = user.AccessToken
+	u.IgPic = user.AvatarURL
 
 	// c.Bind maps the request to the given struct
-	if err := c.Bind(&u); err != nil {
-		return err
-	}
+	//if err := c.Bind(&u); err != nil {
+	//	return err
+	//}
 	DB.Create(&u)
 	return c.JSON(http.StatusCreated, &u)
 

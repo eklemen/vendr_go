@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/eklemen/vendr/controllers"
 	"github.com/eklemen/vendr/models"
+	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/instagram"
 	"github.com/subosito/gotenv"
 	"os"
@@ -42,24 +44,35 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	//e.Use(middleware.JWT(os.Getenv("JWT_SECRET")))
 
 	// Authentication strategies
+	key := os.Getenv("GOTH_SESSION_SECRET")
+	maxAge := 86400 * 30 // 30 days
+
+	store := sessions.NewCookieStore([]byte(key))
+	store.MaxAge(maxAge)
+	store.Options.Path = "/"
+	store.Options.HttpOnly = true // HttpOnly should always be enabled
+	store.Options.Secure = false
+
+	gothic.Store = store
 	goth.UseProviders(
 		instagram.New(
-			"0c6f9953a60e4ceaa28ef77f53f8a1d1",
-			"8aa0026c837245189f8f94ee9a05a08e",
-			"http://localhost:8080/auth/instagram/callback"),
+			os.Getenv("INSTAGRAM_CLIENT_ID"),
+			os.Getenv("INSTAGRAM_CLIENT_SECRET"),
+			"http://localhost:8080/auth/instagram/callback?provider=instagram"),
 	)
 
 	// Routes
 
 	// Auth
-	e.GET("/auth/{provider}", controllers.AuthInstagram)
-	e.GET("/auth/{provider}/callback", controllers.AuthInstagramCB)
+	e.GET("/auth/:provider", controllers.AuthInstagram)
+	e.GET("/auth/:provider/callback", controllers.AuthInstagramCB)
 
 	// User
 	e.GET("/users", controllers.GetAllUsers)
-	e.POST("/users", controllers.CreateUser)
+	//e.POST("/users", controllers.CreateUser)
 	e.GET("/users/:id", controllers.GetUser)
 	e.PUT("/users/:id", controllers.UpdateUser)
 	e.DELETE("/users/:id", controllers.DeleteUser)
@@ -67,9 +80,3 @@ func main() {
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
 }
-
-//func wrapHandler(h http.Handler) http.Handler {
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		h.ServeHTTP(w, r)
-//	})
-//}
