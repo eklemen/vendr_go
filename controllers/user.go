@@ -1,38 +1,78 @@
 package controllers
 
 import (
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/markbates/goth"
 	"github.com/satori/go.uuid"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 var DB *gorm.DB
 
+type (
+	createdUser struct {
+		User  interface{} `json:"user"`
+		Token string      `json:"token"`
+	}
+)
+
 func CreateUser(c echo.Context, user goth.User) error {
 	//u := new(User) equivalent to line below
 	u := models.NewUser()
-	id := uuid.NewV4()
-	u.Uuid = id
-	// TODO: make an interface for this?
-	u.Token = user.AccessToken
-	u.Email = user.Email
+
+	// Search for existing user
 	u.IgID = user.UserID
 	u.IgUsername = user.NickName
-	u.IgFullName = user.FirstName + " " + user.LastName
-	u.IgToken = user.AccessToken
-	u.IgPic = user.AvatarURL
+	// Can this be shortened to
+	// DB.First(&u) ?
+	f := DB.Where(
+		&models.User{
+			IgID:       u.IgID,
+			IgUsername: u.IgUsername,
+		}).First(&u)
 
+	// Create token
+	token := jwt.New(jwt.SigningMethodHS256)
+	// Generate encoded token and send it as response.
+	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return err
+	}
+
+	if f.RecordNotFound() {
+		fmt.Println("NOT FOUND")
+		id := uuid.NewV4()
+		u.Uuid = id
+		// TODO: make an interface for this?
+		u.Email = user.Email
+		u.IgID = user.UserID
+		u.IgUsername = user.NickName
+		u.IgFullName = user.FirstName + " " + user.LastName
+		u.IgToken = user.AccessToken
+		u.IgPic = user.AvatarURL
+		DB.Create(&u)
+		nu := &createdUser{
+			Token: t,
+			User:  u,
+		}
+		return c.JSON(http.StatusCreated, &nu)
+	} else {
+		nu := &createdUser{
+			Token: t,
+			User:  f.Value,
+		}
+		return c.JSON(http.StatusOK, nu)
+	}
 	// c.Bind maps the request to the given struct
 	//if err := c.Bind(&u); err != nil {
 	//	return err
 	//}
-	DB.Create(&u)
-	return c.JSON(http.StatusCreated, &u)
-
 }
 
 func GetAllUsers(c echo.Context) error {
@@ -63,14 +103,20 @@ func DeleteUser(c echo.Context) error {
 }
 
 func GetUser(c echo.Context) error {
-	var user models.User
-	res := DB.Preload("CreatedEvents").First(&user, c.Param("id"))
+	var u models.User
+	uuid := c.Param("uuid")
+	fmt.Println("ID", uuid)
+	r := DB.Preload("CreatedEvents").
+		// Gives error type string and type uuid
+		//Where(&models.User{Uuid: uuid}).
+		Where("uuid = ?", uuid).
+		First(&u, c.Param("id"))
 
-	if res.RecordNotFound() {
+	if r.RecordNotFound() {
 		return c.JSON(http.StatusNotFound, "Record not found")
 	}
-	if res.Error != nil {
-		return res.Error
+	if r.Error != nil {
+		return r.Error
 	}
-	return c.JSON(http.StatusOK, res.Value)
+	return c.JSON(http.StatusOK, r.Value)
 }

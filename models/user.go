@@ -15,7 +15,18 @@ type (
 		IgToken       string    `json:"igToken"`
 		IgPic         string    `json:"igPic"`
 		CreatedEvents []Event   `json:"createdEvents" gorm:"foreignkey:CreatorID"`
-		DeletedAt     string    `json:"-"`
+		//DeletedAt     string    `json:"-"`
+	}
+)
+
+// How to convert this to User
+type (
+	IgUser struct {
+		Email       string `json:"email"`
+		UserId      string `json:"igId"`
+		NickName    string `json:"igUsername"`
+		AccessToken string `json:"igToken"`
+		AvatarURL   string `json:"igPic"`
 	}
 )
 

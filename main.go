@@ -73,9 +73,9 @@ func main() {
 	// User
 	e.GET("/users", controllers.GetAllUsers)
 	//e.POST("/users", controllers.CreateUser)
-	e.GET("/users/:id", controllers.GetUser)
-	e.PUT("/users/:id", controllers.UpdateUser)
-	e.DELETE("/users/:id", controllers.DeleteUser)
+	e.GET("/users/:uuid", controllers.GetUser)
+	e.PUT("/users/:uuid", controllers.UpdateUser)
+	e.DELETE("/users/:uuid", controllers.DeleteUser)
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
