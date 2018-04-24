@@ -6,7 +6,6 @@ type (
 	User struct {
 		ID            int       `json:"-"`
 		Uuid          uuid.UUID `json:"uuid"`
-		Token         string    `json:"token"`
 		Email         string    `json:"email"`
 		Phone         string    `json:"phone"`
 		IgID          string    `json:"igId"`
@@ -16,17 +15,6 @@ type (
 		IgPic         string    `json:"igPic"`
 		CreatedEvents []Event   `json:"createdEvents" gorm:"foreignkey:CreatorID"`
 		//DeletedAt     string    `json:"-"`
-	}
-)
-
-// How to convert this to User
-type (
-	IgUser struct {
-		Email       string `json:"email"`
-		UserId      string `json:"igId"`
-		NickName    string `json:"igUsername"`
-		AccessToken string `json:"igToken"`
-		AvatarURL   string `json:"igPic"`
 	}
 )
 

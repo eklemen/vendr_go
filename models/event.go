@@ -9,7 +9,6 @@ type (
 		Title     string `json:"title"`
 		Creator   User   `json:"creator"`
 		CreatorID int    `json:"creatorId"`
-		DeletedAt string `json:"-"`
 	}
 )
 

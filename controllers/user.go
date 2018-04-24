@@ -22,6 +22,14 @@ type (
 	}
 )
 
+func getBearer(c echo.Context) uuid.UUID {
+	usr := c.Get("user").(*jwt.Token)
+	claims := usr.Claims.(jwt.MapClaims)
+	uid := claims["uuid"].(string)
+	id, _ := uuid.FromString(uid)
+	return id
+}
+
 func CreateUser(c echo.Context, user goth.User) error {
 	//u := new(User) equivalent to line below
 	u := models.NewUser()
@@ -51,10 +59,7 @@ func CreateUser(c echo.Context, user goth.User) error {
 	}
 
 	if f.RecordNotFound() {
-		fmt.Println("NOT FOUND")
-
 		u.Uuid = uuid
-		// TODO: make an interface for this?
 		u.Email = user.Email
 		u.IgID = user.UserID
 		u.IgUsername = user.NickName
@@ -91,6 +96,10 @@ func GetAllUsers(c echo.Context) error {
 
 func UpdateUser(c echo.Context) error {
 	uuid, _ := uuid.FromString(c.Param("uuid"))
+	t := getBearer(c)
+	if t != uuid {
+		return c.JSON(http.StatusUnauthorized, "You cannot update this user")
+	}
 	u := &models.User{Uuid: uuid}
 	if err := c.Bind(u); err != nil {
 		return err
@@ -113,11 +122,11 @@ func DeleteUser(c echo.Context) error {
 }
 
 func GetUser(c echo.Context) error {
-	//usr := c.Get("user").(*jwt.Token)
-	//claims := usr.Claims.(jwt.MapClaims)
+	usr := c.Get("user").(*jwt.Token)
+	claims := usr.Claims.(jwt.MapClaims)
 	//uid := claims["uuid"]
-	//fmt.Println("uid", uid)
-	//fmt.Println("usr", usr)
+	fmt.Println("CLAIMS", claims)
+	fmt.Println("usr", usr)
 
 	var u models.User
 	uid, _ := uuid.FromString(c.Param("uuid"))

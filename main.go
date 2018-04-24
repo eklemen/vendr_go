@@ -72,11 +72,12 @@ func main() {
 	e.GET("/auth/:provider/callback", controllers.AuthInstagramCB)
 
 	// User
-	e.GET("/users", controllers.GetAllUsers)
-	e.GET("/users/:uuid", controllers.GetUser)
-	e.PUT("/users/:uuid", controllers.UpdateUser)
-	e.DELETE("/users/:uuid", controllers.DeleteUser)
-	e.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
+	r := e.Group("/api")
+	r.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
+	r.GET("/users", controllers.GetAllUsers)
+	r.GET("/users/:uuid", controllers.GetUser)
+	r.PUT("/users/:uuid", controllers.UpdateUser)
+	r.DELETE("/users/:uuid", controllers.DeleteUser)
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
