@@ -37,8 +37,13 @@ func CreateUser(c echo.Context, user goth.User) error {
 			IgUsername: u.IgUsername,
 		}).First(&u)
 
+	// Create uuid to encode in JWT
+	uuid := uuid.NewV4()
 	// Create token
 	token := jwt.New(jwt.SigningMethodHS256)
+	// Set claims
+	claims := token.Claims.(jwt.MapClaims)
+	claims["uuid"] = uuid
 	// Generate encoded token and send it as response.
 	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
@@ -47,8 +52,8 @@ func CreateUser(c echo.Context, user goth.User) error {
 
 	if f.RecordNotFound() {
 		fmt.Println("NOT FOUND")
-		id := uuid.NewV4()
-		u.Uuid = id
+
+		u.Uuid = uuid
 		// TODO: make an interface for this?
 		u.Email = user.Email
 		u.IgID = user.UserID
@@ -77,7 +82,7 @@ func CreateUser(c echo.Context, user goth.User) error {
 
 func GetAllUsers(c echo.Context) error {
 	var users []models.User
-	res := DB.Find(&users)
+	res := DB.Preload("CreatedEvents").Find(&users)
 	if res.Error != nil {
 		return res.Error
 	}
@@ -85,14 +90,19 @@ func GetAllUsers(c echo.Context) error {
 }
 
 func UpdateUser(c echo.Context) error {
-	//u := new(User)
-	id, _ := strconv.Atoi(c.Param("id"))
-	u := &models.User{ID: id}
+	uuid, _ := uuid.FromString(c.Param("uuid"))
+	u := &models.User{Uuid: uuid}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
 	DB.Model(&u).Updates(&u)
-	return c.JSON(http.StatusOK, &u)
+	r := DB.Preload("CreatedEvents").
+		Where(&models.User{Uuid: uuid}).
+		First(&u)
+	if r.Error != nil {
+		return r.Error
+	}
+	return c.JSON(http.StatusOK, r.Value)
 }
 
 func DeleteUser(c echo.Context) error {
@@ -103,14 +113,18 @@ func DeleteUser(c echo.Context) error {
 }
 
 func GetUser(c echo.Context) error {
+	//usr := c.Get("user").(*jwt.Token)
+	//claims := usr.Claims.(jwt.MapClaims)
+	//uid := claims["uuid"]
+	//fmt.Println("uid", uid)
+	//fmt.Println("usr", usr)
+
 	var u models.User
-	uuid := c.Param("uuid")
-	fmt.Println("ID", uuid)
+	uid, _ := uuid.FromString(c.Param("uuid"))
 	r := DB.Preload("CreatedEvents").
 		// Gives error type string and type uuid
-		//Where(&models.User{Uuid: uuid}).
-		Where("uuid = ?", uuid).
-		First(&u, c.Param("id"))
+		Where(&models.User{Uuid: uid}).
+		First(&u)
 
 	if r.RecordNotFound() {
 		return c.JSON(http.StatusNotFound, "Record not found")

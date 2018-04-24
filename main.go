@@ -41,6 +41,7 @@ func main() {
 	db.AutoMigrate(&models.Event{})
 
 	e := echo.New()
+	e.Debug = true
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -72,10 +73,10 @@ func main() {
 
 	// User
 	e.GET("/users", controllers.GetAllUsers)
-	//e.POST("/users", controllers.CreateUser)
 	e.GET("/users/:uuid", controllers.GetUser)
 	e.PUT("/users/:uuid", controllers.UpdateUser)
 	e.DELETE("/users/:uuid", controllers.DeleteUser)
+	e.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
