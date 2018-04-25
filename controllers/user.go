@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
@@ -22,12 +21,13 @@ type (
 	}
 )
 
-func getBearer(c echo.Context) uuid.UUID {
-	usr := c.Get("user").(*jwt.Token)
-	claims := usr.Claims.(jwt.MapClaims)
-	uid := claims["uuid"].(string)
-	id, _ := uuid.FromString(uid)
-	return id
+func ListUsers(c echo.Context) error {
+	var users []models.User
+	r := DB.Preload("CreatedEvents").Find(&users)
+	if r.Error != nil {
+		return r.Error
+	}
+	return c.JSON(http.StatusOK, r.Value)
 }
 
 func CreateUser(c echo.Context, user goth.User) error {
@@ -46,20 +46,15 @@ func CreateUser(c echo.Context, user goth.User) error {
 		}).First(&u)
 
 	// Create uuid to encode in JWT
-	uuid := uuid.NewV4()
+	uid := uuid.NewV4()
 	// Create token
 	token := jwt.New(jwt.SigningMethodHS256)
-	// Set claims
+	// Set claims (the DB id is encoded below)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["uuid"] = uuid
-	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		return err
-	}
+	claims["uuid"] = uid
 
 	if f.RecordNotFound() {
-		u.Uuid = uuid
+		u.Uuid = uid
 		u.Email = user.Email
 		u.IgID = user.UserID
 		u.IgUsername = user.NickName
@@ -67,46 +62,44 @@ func CreateUser(c echo.Context, user goth.User) error {
 		u.IgToken = user.AccessToken
 		u.IgPic = user.AvatarURL
 		DB.Create(&u)
+		// Generate encoded token and send it as response.
+		claims["id"] = u.ID
+		t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		if err != nil {
+			return err
+		}
 		nu := &createdUser{
 			Token: t,
 			User:  u,
 		}
 		return c.JSON(http.StatusCreated, &nu)
 	} else {
+		claims["id"] = u.ID
+		t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		if err != nil {
+			return err
+		}
 		nu := &createdUser{
 			Token: t,
 			User:  f.Value,
 		}
 		return c.JSON(http.StatusOK, nu)
 	}
-	// c.Bind maps the request to the given struct
-	//if err := c.Bind(&u); err != nil {
-	//	return err
-	//}
-}
-
-func GetAllUsers(c echo.Context) error {
-	var users []models.User
-	res := DB.Preload("CreatedEvents").Find(&users)
-	if res.Error != nil {
-		return res.Error
-	}
-	return c.JSON(http.StatusOK, res.Value)
 }
 
 func UpdateUser(c echo.Context) error {
-	uuid, _ := uuid.FromString(c.Param("uuid"))
-	t := getBearer(c)
-	if t != uuid {
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	t := GetBearerUuid(c)
+	if t != uid {
 		return c.JSON(http.StatusUnauthorized, "You cannot update this user")
 	}
-	u := &models.User{Uuid: uuid}
+	u := &models.User{Uuid: uid}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
 	DB.Model(&u).Updates(&u)
 	r := DB.Preload("CreatedEvents").
-		Where(&models.User{Uuid: uuid}).
+		Where(&models.User{Uuid: uid}).
 		First(&u)
 	if r.Error != nil {
 		return r.Error
@@ -122,13 +115,7 @@ func DeleteUser(c echo.Context) error {
 }
 
 func GetUser(c echo.Context) error {
-	usr := c.Get("user").(*jwt.Token)
-	claims := usr.Claims.(jwt.MapClaims)
-	//uid := claims["uuid"]
-	fmt.Println("CLAIMS", claims)
-	fmt.Println("usr", usr)
-
-	var u models.User
+	u := new(models.User)
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	r := DB.Preload("CreatedEvents").
 		// Gives error type string and type uuid

@@ -74,10 +74,14 @@ func main() {
 	// User
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
-	r.GET("/users", controllers.GetAllUsers)
+	r.GET("/users", controllers.ListUsers)
 	r.GET("/users/:uuid", controllers.GetUser)
 	r.PUT("/users/:uuid", controllers.UpdateUser)
 	r.DELETE("/users/:uuid", controllers.DeleteUser)
+
+	// Event
+	r.GET("/events", controllers.ListEvents)
+	r.POST("/events", controllers.CreateEvent)
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
