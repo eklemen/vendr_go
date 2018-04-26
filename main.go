@@ -82,6 +82,8 @@ func main() {
 	// Event
 	r.GET("/events", controllers.ListEvents)
 	r.POST("/events", controllers.CreateEvent)
+	r.GET("/events/:uuid", controllers.GetEvent)
+	r.DELETE("/events/:uuid", controllers.DeleteEvent)
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))

@@ -9,7 +9,6 @@ import (
 	"github.com/satori/go.uuid"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 var DB *gorm.DB
@@ -24,6 +23,23 @@ type (
 func ListUsers(c echo.Context) error {
 	var users []models.User
 	r := DB.Preload("CreatedEvents").Find(&users)
+	if r.Error != nil {
+		return r.Error
+	}
+	return c.JSON(http.StatusOK, r.Value)
+}
+
+func GetUser(c echo.Context) error {
+	u := new(models.User)
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	r := DB.Preload("CreatedEvents").
+		// Gives error type string and type uuid
+		Where(&models.User{Uuid: uid}).
+		First(&u)
+
+	if r.RecordNotFound() {
+		return c.JSON(http.StatusNotFound, "Record not found")
+	}
 	if r.Error != nil {
 		return r.Error
 	}
@@ -108,25 +124,8 @@ func UpdateUser(c echo.Context) error {
 }
 
 func DeleteUser(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	u := &models.User{ID: id}
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	u := &models.User{Uuid: uid}
 	DB.Delete(&u)
 	return c.NoContent(http.StatusNoContent)
-}
-
-func GetUser(c echo.Context) error {
-	u := new(models.User)
-	uid, _ := uuid.FromString(c.Param("uuid"))
-	r := DB.Preload("CreatedEvents").
-		// Gives error type string and type uuid
-		Where(&models.User{Uuid: uid}).
-		First(&u)
-
-	if r.RecordNotFound() {
-		return c.JSON(http.StatusNotFound, "Record not found")
-	}
-	if r.Error != nil {
-		return r.Error
-	}
-	return c.JSON(http.StatusOK, r.Value)
 }
