@@ -18,13 +18,12 @@ func ListEvents(c echo.Context) error {
 
 func CreateEvent(c echo.Context) error {
 	e := new(models.Event)
-	//n := models.User{Uuid: GetBearerUuid(c)}
-	//f := DB.Where(&n).First(&n)
 	if err := c.Bind(&e); err != nil {
 		return err
 	}
+	e.CreatorID = c.Get("userId").(int)
 	e.Uuid = uuid.NewV4()
-	//e.Creator = f.Value
 	DB.Create(&e)
-	return c.JSON(http.StatusCreated, &e)
+	r := DB.Preload("Creator").First(&e, e.ID)
+	return c.JSON(http.StatusCreated, r)
 }

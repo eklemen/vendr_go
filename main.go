@@ -42,10 +42,9 @@ func main() {
 
 	e := echo.New()
 	e.Debug = true
-	// Middleware
+	// Middlewares
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	//e.Use(middleware.JWT(os.Getenv("JWT_SECRET")))
 
 	// Authentication strategies
 	key := os.Getenv("GOTH_SESSION_SECRET")
@@ -74,6 +73,7 @@ func main() {
 	// User
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
+	r.Use(SetUserId)
 	r.GET("/users", controllers.ListUsers)
 	r.GET("/users/:uuid", controllers.GetUser)
 	r.PUT("/users/:uuid", controllers.UpdateUser)
