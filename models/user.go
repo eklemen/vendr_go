@@ -17,8 +17,8 @@ type (
 		IgToken         string     `json:"igToken"`
 		IgPic           string     `json:"igPic"`
 		DeletedAt       *time.Time `json:"-"`
-		CreatedEvents   []Event    `json:"createdEvents" gorm:"foreignkey:CreatorID"`
-		EventsAttending []Event    `json:"eventsAttending"`
+		CreatedEvents   []Event    `json:"createdEvents,omitempty" gorm:"foreignkey:CreatorID"`
+		EventsAttending []Event    `json:"eventsAttending,omitempty" gorm:"many2many:event_users;"`
 	}
 )
 

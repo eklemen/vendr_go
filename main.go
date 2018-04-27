@@ -39,6 +39,7 @@ func main() {
 	// Migrate the schema
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Event{})
+	db.AutoMigrate(&models.EventUser{})
 
 	e := echo.New()
 	e.Debug = true

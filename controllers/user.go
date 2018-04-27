@@ -105,7 +105,7 @@ func CreateUser(c echo.Context, user goth.User) error {
 
 func UpdateUser(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
-	t := GetBearerUuid(c)
+	t := c.Get("uuid").(uuid.UUID)
 	if t != uid {
 		return c.JSON(http.StatusUnauthorized, "You cannot update this user")
 	}
