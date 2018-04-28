@@ -36,6 +36,7 @@ func main() {
 	}
 	defer db.Close()
 	controllers.DB = db
+	db.LogMode(true)
 	// Migrate the schema
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Event{})
@@ -49,7 +50,7 @@ func main() {
 
 	// Authentication strategies
 	key := os.Getenv("GOTH_SESSION_SECRET")
-	maxAge := 86400 * 30 // 30 days
+	maxAge := 86400 * 90 // 90 days
 
 	store := sessions.NewCookieStore([]byte(key))
 	store.MaxAge(maxAge)

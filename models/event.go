@@ -13,7 +13,7 @@ type (
 		EventDate string     `json:"eventDate"`
 		Title     string     `json:"title"`
 		Creator   User       `json:"creator"`
-		Attendees []User     `json:"attendees" gorm:"many2many:event_users;"`
+		Attendees []*User    `json:"attendees" gorm:"many2many:event_users;"`
 		DeletedAt *time.Time `json:"-"`
 		CreatorID int        `json:"-"`
 	}

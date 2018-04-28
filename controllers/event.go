@@ -9,7 +9,9 @@ import (
 
 func ListEvents(c echo.Context) error {
 	var e []models.Event
-	r := DB.Preload("Creator").Find(&e)
+	r := DB.Preload("Creator").
+		Preload("Attendees").
+		Find(&e)
 	if r.Error != nil {
 		return r.Error
 	}
@@ -44,15 +46,13 @@ func CreateEvent(c echo.Context) error {
 	// set the creator
 	e.CreatorID = userId
 	e.Uuid = uuid.NewV4()
-	//e.Attendees = []models.User{
-	//	{ID: userId},
-	//}
 
-	//// Create the event
+	//// create the event
 	DB.Create(&e)
-	DB.Model(&e).Association("Attendees").Append(models.User{ID: userId, Email: "foo@bar.com"})
-
-	//// Add the token bearer as an attendee
+	//// add the token bearer (creator) as an attendee
+	DB.Model(&e).
+		Association("Attendees").
+		Append(models.User{ID: userId})
 
 	r := DB.Preload("Creator").
 		Preload("Attendees").
