@@ -34,16 +34,33 @@ func GetEvent(c echo.Context) error {
 
 func CreateEvent(c echo.Context) error {
 	e := new(models.Event)
+
+	// get user id of token bearer
+	userId := c.Get("userId").(int)
 	if err := c.Bind(&e); err != nil {
 		return err
 	}
-	e.CreatorID = c.Get("userId").(int)
+
+	// set the creator
+	e.CreatorID = userId
 	e.Uuid = uuid.NewV4()
+	//e.Attendees = []models.User{
+	//	{ID: userId},
+	//}
+
+	//// Create the event
 	DB.Create(&e)
-	r := DB.Preload("Creator").First(&e, e.ID)
+	DB.Model(&e).Association("Attendees").Append(models.User{ID: userId, Email: "foo@bar.com"})
+
+	//// Add the token bearer as an attendee
+
+	r := DB.Preload("Creator").
+		Preload("Attendees").
+		First(&e, e.ID)
 	if r.Error != nil {
 		return r.Error
 	}
+
 	return c.JSON(http.StatusCreated, r.Value)
 }
 
