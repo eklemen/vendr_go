@@ -7,15 +7,15 @@ import (
 
 type (
 	Event struct {
-		ID        int        `json:"-"`
-		Uuid      uuid.UUID  `json:"uuid"`
-		Venue     string     `json:"venue"`
-		EventDate string     `json:"eventDate"`
-		Title     string     `json:"title"`
-		Creator   User       `json:"creator"`
-		Attendees []*User    `json:"attendees" gorm:"many2many:event_users;"`
-		DeletedAt *time.Time `json:"-"`
-		CreatorID int        `json:"-"`
+		ID        int          `json:"-"`
+		Uuid      uuid.UUID    `json:"uuid"`
+		Venue     string       `json:"venue"`
+		EventDate string       `json:"eventDate"`
+		Title     string       `json:"title"`
+		Creator   User         `json:"creator"`
+		Attendees []*EventUser `json:"attendees"`
+		DeletedAt *time.Time   `json:"-"`
+		CreatorID int          `json:"-"`
 	}
 )
 

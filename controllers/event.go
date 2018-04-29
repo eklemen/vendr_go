@@ -10,7 +10,7 @@ import (
 func ListEvents(c echo.Context) error {
 	var e []models.Event
 	r := DB.Preload("Creator").
-		Preload("Attendees").
+		Preload("Attendees.User").
 		Find(&e)
 	if r.Error != nil {
 		return r.Error
@@ -22,6 +22,7 @@ func GetEvent(c echo.Context) error {
 	e := new(models.Event)
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	r := DB.Preload("Creator").
+		Preload("Attendees.User").
 		Where(&models.Event{Uuid: uid}).
 		First(&e)
 
@@ -46,16 +47,20 @@ func CreateEvent(c echo.Context) error {
 	// set the creator
 	e.CreatorID = userId
 	e.Uuid = uuid.NewV4()
+	e.Attendees = []*models.EventUser{
+		{
+			UserID: userId,
+			//User:  &models.User{ID: userId}, use this? difference??
+			MemberPermission: "edit",
+			MemberRole:       "vendor",
+		},
+	}
 
-	//// create the event
-	DB.Create(&e)
-	//// add the token bearer (creator) as an attendee
-	DB.Model(&e).
-		Association("Attendees").
-		Append(models.User{ID: userId})
+	// create the event
+	DB.Set("gorm:association_autoupdate", false).Save(&e)
 
-	r := DB.Preload("Creator").
-		Preload("Attendees").
+	r := DB.Preload("Attendees.User").
+		Preload("Creator").
 		First(&e, e.ID)
 	if r.Error != nil {
 		return r.Error
