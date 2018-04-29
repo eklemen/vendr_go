@@ -129,3 +129,19 @@ func DeleteUser(c echo.Context) error {
 	DB.Delete(&u)
 	return c.NoContent(http.StatusNoContent)
 }
+
+func GetSelfEventList(c echo.Context) error {
+	userId := c.Get("userId").(int)
+	r := DB.Preload("EventsAttending.Event").
+		First(&models.User{}, userId)
+	return c.JSON(http.StatusOK, r.Value)
+}
+
+func GetUsersEventList(c echo.Context) error {
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	u := &models.User{Uuid: uid}
+	r := DB.Preload("EventsAttending.Event").
+		Where(u).
+		First(&u)
+	return c.JSON(http.StatusOK, r.Value)
+}

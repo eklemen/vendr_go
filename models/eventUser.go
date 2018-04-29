@@ -2,11 +2,11 @@ package models
 
 type (
 	EventUser struct {
-		ID               int    `json:"id"`
-		EventID          int    `json:"eventId"`
-		Event            *Event `json:"event"`
-		UserID           int    `json:"userId"`
-		User             *User  `json:"user"`
+		ID               int    `json:"-"`
+		EventID          int    `json:"-"`
+		Event            *Event `json:"event,omitempty"`
+		UserID           int    `json:"-"`
+		User             *User  `json:"user,omitempty"`
 		MemberRole       string `json:"memberRole"`
 		MemberPermission string `json:"memberPermission"`
 	}

@@ -80,6 +80,8 @@ func main() {
 	r.GET("/users/:uuid", controllers.GetUser)
 	r.PUT("/users/:uuid", controllers.UpdateUser)
 	r.DELETE("/users/:uuid", controllers.DeleteUser)
+	r.GET("/users/self/events", controllers.GetSelfEventList)
+	r.GET("/users/:uuid/events", controllers.GetUsersEventList)
 
 	// Event
 	r.GET("/events", controllers.ListEvents)

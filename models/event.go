@@ -12,7 +12,7 @@ type (
 		Venue     string       `json:"venue"`
 		EventDate string       `json:"eventDate"`
 		Title     string       `json:"title"`
-		Creator   User         `json:"creator"`
+		Creator   User         `json:"creator,omitempty"`
 		Attendees []*EventUser `json:"attendees"`
 		DeletedAt *time.Time   `json:"-"`
 		CreatorID int          `json:"-"`
