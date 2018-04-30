@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
@@ -132,8 +133,15 @@ func DeleteUser(c echo.Context) error {
 
 func GetSelfEventList(c echo.Context) error {
 	userId := c.Get("userId").(int)
-	r := DB.Preload("EventsAttending.Event").
-		First(&models.User{}, userId)
+	//r := DB.Preload("EventsAttending.Event").
+	//	First(&models.User{}, userId)
+	var e []models.EventUser
+	r := DB.Preload("Event").
+		Where(&models.EventUser{UserID: userId}).
+		Find(&e)
+	if r.Error != nil {
+		return r.Error
+	}
 	return c.JSON(http.StatusOK, r.Value)
 }
 
@@ -143,5 +151,9 @@ func GetUsersEventList(c echo.Context) error {
 	r := DB.Preload("EventsAttending.Event").
 		Where(u).
 		First(&u)
+	if r.Error != nil {
+		return r.Error
+	}
+	fmt.Println(r)
 	return c.JSON(http.StatusOK, r.Value)
 }

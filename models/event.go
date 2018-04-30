@@ -13,14 +13,16 @@ type (
 		EventDate string       `json:"eventDate"`
 		Title     string       `json:"title"`
 		Creator   User         `json:"creator,omitempty"`
-		Attendees []*EventUser `json:"attendees"`
+		Attendees []*EventUser `json:"attendees,omitempty"`
 		DeletedAt *time.Time   `json:"-"`
 		CreatorID int          `json:"-"`
 	}
 )
 
 func NewEvent() *Event {
-	return &Event{}
+	return &Event{
+		Creator: User{},
+	}
 	// TODO: add the array of members later
 	//Creator: []Event{},
 	//}

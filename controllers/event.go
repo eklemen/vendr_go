@@ -49,8 +49,7 @@ func CreateEvent(c echo.Context) error {
 	e.Uuid = uuid.NewV4()
 	e.Attendees = []*models.EventUser{
 		{
-			UserID: userId,
-			//User:  &models.User{ID: userId}, use this? difference??
+			UserID:           userId,
 			MemberPermission: "edit",
 			MemberRole:       "vendor",
 		},
