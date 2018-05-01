@@ -148,9 +148,14 @@ func GetSelfEventList(c echo.Context) error {
 func GetUsersEventList(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	u := &models.User{Uuid: uid}
-	r := DB.Preload("EventsAttending.Event").
-		Where(u).
-		First(&u)
+	user := DB.Where(u).First(&u)
+	fmt.Println(user.Value)
+	//r := DB.Preload("EventsAttending.Event").
+	//	Where(user.Value).
+	//	First(&u)
+	var e []models.EventUser
+	r := DB.Where(user.Value).
+		Find(&e)
 	if r.Error != nil {
 		return r.Error
 	}
