@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
+	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/markbates/goth"
@@ -20,6 +21,9 @@ type (
 		Token string      `json:"token"`
 	}
 )
+type userId struct {
+	ID int
+}
 
 func ListUsers(c echo.Context) error {
 	var users []models.User
@@ -147,18 +151,21 @@ func GetSelfEventList(c echo.Context) error {
 
 func GetUsersEventList(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
-	u := &models.User{Uuid: uid}
-	user := DB.Where(u).First(&u)
-	fmt.Println(user.Value)
+	//u := &models.User{Uuid: uid}
+	//user := DB.Where(u).First(&u)
+	//fmt.Println(user.Value)
 	//r := DB.Preload("EventsAttending.Event").
 	//	Where(user.Value).
 	//	First(&u)
+	var userId userId
+	DB.Raw("SELECT id FROM users WHERE uuid = ?", uid).Scan(&userId)
+
 	var e []models.EventUser
-	r := DB.Where(user.Value).
+	r := DB.Preload("Event").
+		Where(&models.EventUser{UserID: userId.ID}).
 		Find(&e)
 	if r.Error != nil {
 		return r.Error
 	}
-	fmt.Println(r)
 	return c.JSON(http.StatusOK, r.Value)
 }
