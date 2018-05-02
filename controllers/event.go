@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/eklemen/vendr/models"
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
@@ -66,6 +67,25 @@ func CreateEvent(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, r.Value)
+}
+
+func UpdateEvent(c echo.Context) error {
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	e := &models.Event{Uuid: uid}
+	if err := c.Bind(e); err != nil {
+		return err
+	}
+	fmt.Println("+++++++", e)
+	DB.Model(&e).Updates(&e)
+	fmt.Println("-------", e)
+	r := DB.Preload("Creator").
+		Preload("Attendees.User").
+		Where(&models.Event{Uuid: uid}).
+		First(&e)
+	if r.Error != nil {
+		return r.Error
+	}
+	return c.JSON(http.StatusOK, r.Value)
 }
 
 func DeleteEvent(c echo.Context) error {

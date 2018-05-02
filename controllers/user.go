@@ -1,10 +1,8 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
-	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/markbates/goth"

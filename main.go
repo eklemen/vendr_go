@@ -87,6 +87,7 @@ func main() {
 	r.GET("/events", controllers.ListEvents)
 	r.POST("/events", controllers.CreateEvent)
 	r.GET("/events/:uuid", controllers.GetEvent)
+	r.PUT("/events/:uuid", controllers.UpdateEvent)
 	r.DELETE("/events/:uuid", controllers.DeleteEvent)
 
 	// Start server
