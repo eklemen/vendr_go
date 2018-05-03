@@ -17,13 +17,13 @@ type (
 		IgToken         string       `json:"igToken"`
 		IgPic           string       `json:"igPic"`
 		DeletedAt       *time.Time   `json:"-"`
-		CreatedEvents   []Event      `json:"createdEvents,omitempty" gorm:"foreignkey:CreatorID"`
+		CreatedEvents   []*Event     `json:"createdEvents,omitempty" gorm:"foreignkey:CreatorID"`
 		EventsAttending []*EventUser `json:"eventsAttending,omitempty"`
 	}
 )
 
 func NewUser() *User {
 	return &User{
-		CreatedEvents: []Event{},
+		CreatedEvents: []*Event{},
 	}
 }

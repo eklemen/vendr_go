@@ -19,13 +19,10 @@ type (
 		Token string      `json:"token"`
 	}
 )
-type userId struct {
-	ID int
-}
 
 func ListUsers(c echo.Context) error {
 	var users []models.User
-	r := DB.Preload("CreatedEvents").Find(&users)
+	r := DB.Find(&users)
 	if r.Error != nil {
 		return r.Error
 	}
@@ -36,7 +33,6 @@ func GetUser(c echo.Context) error {
 	u := new(models.User)
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	r := DB.Preload("CreatedEvents").
-		// Gives error type string and type uuid
 		Where(&models.User{Uuid: uid}).
 		First(&u)
 
@@ -119,9 +115,12 @@ func UpdateUser(c echo.Context) error {
 	}
 	// update the user and return the full record
 	DB.Model(&u).Updates(&u)
-	r := DB.Preload("CreatedEvents").
-		Where(&models.User{Uuid: uid}).
+	r := DB.Where(&models.User{Uuid: uid}).
 		First(&u)
+
+	// can preload nested structs
+	//Preload("CreatedEvents").Preload("CreatedEvents.Creator").
+
 	if r.Error != nil {
 		return r.Error
 	}
@@ -139,6 +138,7 @@ func GetSelfEventList(c echo.Context) error {
 	userId := c.Get("userId").(int)
 	var e []models.EventUser
 	r := DB.Preload("Event").
+		Preload("Event.Creator").
 		Where(&models.EventUser{UserID: userId}).
 		Find(&e)
 	if r.Error != nil {
@@ -149,18 +149,13 @@ func GetSelfEventList(c echo.Context) error {
 
 func GetUsersEventList(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
-	//u := &models.User{Uuid: uid}
-	//user := DB.Where(u).First(&u)
-	//fmt.Println(user.Value)
-	//r := DB.Preload("EventsAttending.Event").
-	//	Where(user.Value).
-	//	First(&u)
-	var userId userId
-	DB.Raw("SELECT id FROM users WHERE uuid = ?", uid).Scan(&userId)
+	user := &models.User{Uuid: uid}
+	DB.Select([]string{"id"}).Where(&user).First(&user)
 
 	var e []models.EventUser
 	r := DB.Preload("Event").
-		Where(&models.EventUser{UserID: userId.ID}).
+		Preload("Event.Creator").
+		Where(&models.EventUser{UserID: user.ID}).
 		Find(&e)
 	if r.Error != nil {
 		return r.Error

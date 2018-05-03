@@ -18,12 +18,3 @@ type (
 		CreatorID int          `json:"-"`
 	}
 )
-
-func NewEvent() *Event {
-	return &Event{
-		Creator: User{},
-	}
-	// TODO: add the array of members later
-	//Creator: []Event{},
-	//}
-}
