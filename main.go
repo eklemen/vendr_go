@@ -71,24 +71,28 @@ func main() {
 	// Auth
 	e.GET("/auth/:provider", controllers.AuthInstagram)
 	e.GET("/auth/:provider/callback", controllers.AuthInstagramCB)
+	e.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
 
 	// User
-	r := e.Group("/api")
-	r.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
-	r.Use(SetUserId)
-	r.GET("/users", controllers.ListUsers)
-	r.GET("/users/:uuid", controllers.GetUser)
-	r.PUT("/users/:uuid", controllers.UpdateUser)
-	r.DELETE("/users/:uuid", controllers.DeleteUser)
-	r.GET("/users/self/events", controllers.GetSelfEventList)
-	r.GET("/users/:uuid/events", controllers.GetUsersEventList)
+	u := e.Group("/api/users")
+	u.Use(SetUserId)
+	u.GET("", controllers.ListUsers)
+	u.GET("/:uuid", controllers.GetUser)
+	u.PUT("/:uuid", controllers.UpdateUser)
+	u.DELETE("/:uuid", controllers.DeleteUser)
+	u.GET("/self/events", controllers.GetSelfEventList)
+	u.GET("/:uuid/events", controllers.GetUsersEventList)
 
 	// Event
-	r.GET("/events", controllers.ListEvents)
-	r.POST("/events", controllers.CreateEvent)
-	r.GET("/events/:uuid", controllers.GetEvent)
-	r.PUT("/events/:uuid", controllers.UpdateEvent)
-	r.DELETE("/events/:uuid", controllers.DeleteEvent)
+	event := e.Group("/api/events")
+	event.Use(GetEventIDFromUUID)
+	event.Use(SetUserId)
+	event.GET("", controllers.ListEvents)
+	event.POST("", controllers.CreateEvent)
+	event.GET("/:uuid", controllers.GetEvent)
+	event.PUT("/:uuid", controllers.UpdateEvent)
+	event.POST("/:uuid/join", controllers.JoinEvent)
+	event.DELETE("/:uuid", controllers.DeleteEvent)
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))

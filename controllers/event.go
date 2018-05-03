@@ -1,12 +1,16 @@
 package controllers
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/eklemen/vendr/models"
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
 	"net/http"
 )
+
+type memberRoleAndPerm struct {
+	Role string `json:"role"`
+}
 
 func ListEvents(c echo.Context) error {
 	var e []models.Event
@@ -75,9 +79,7 @@ func UpdateEvent(c echo.Context) error {
 	if err := c.Bind(e); err != nil {
 		return err
 	}
-	fmt.Println("+++++++", e)
 	DB.Model(&e).Updates(&e)
-	fmt.Println("-------", e)
 	r := DB.Preload("Creator").
 		Preload("Attendees.User").
 		Where(&models.Event{Uuid: uid}).
@@ -93,4 +95,32 @@ func DeleteEvent(c echo.Context) error {
 	e := &models.Event{Uuid: uid}
 	DB.Delete(&e)
 	return c.NoContent(http.StatusNoContent)
+}
+
+func JoinEvent(c echo.Context) error {
+	// get eventId and userId from context
+	eId := c.Get("eventId").(int)
+	u := c.Get("userId").(int)
+	// Decode the request body and grab the role
+	var memberRole memberRoleAndPerm
+	err := json.NewDecoder(c.Request().Body).Decode(&memberRole)
+	if err != nil {
+		return err
+	}
+
+	eu := models.EventUser{
+		EventID:          eId,
+		UserID:           u,
+		MemberRole:       memberRole.Role,
+		MemberPermission: "read"}
+	DB.FirstOrCreate(&eu, eu)
+
+	r := DB.Preload("Attendees.User").
+		Preload("Creator").
+		First(&models.Event{}, eId)
+	if r.Error != nil {
+		return r.Error
+	}
+
+	return c.JSON(http.StatusOK, r.Value)
 }

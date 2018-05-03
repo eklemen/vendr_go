@@ -109,6 +109,7 @@ func CreateUser(c echo.Context, user goth.User) error {
 func UpdateUser(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	t := c.Get("uuid").(uuid.UUID)
+	// reject if user tries to update another user
 	if t != uid {
 		return c.JSON(http.StatusUnauthorized, "You cannot update this user")
 	}
@@ -116,6 +117,7 @@ func UpdateUser(c echo.Context) error {
 	if err := c.Bind(u); err != nil {
 		return err
 	}
+	// update the user and return the full record
 	DB.Model(&u).Updates(&u)
 	r := DB.Preload("CreatedEvents").
 		Where(&models.User{Uuid: uid}).
@@ -135,8 +137,6 @@ func DeleteUser(c echo.Context) error {
 
 func GetSelfEventList(c echo.Context) error {
 	userId := c.Get("userId").(int)
-	//r := DB.Preload("EventsAttending.Event").
-	//	First(&models.User{}, userId)
 	var e []models.EventUser
 	r := DB.Preload("Event").
 		Where(&models.EventUser{UserID: userId}).
