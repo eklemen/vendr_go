@@ -87,6 +87,10 @@ func main() {
 	event := e.Group("/api/events")
 	event.Use(GetEventIDFromUUID)
 	event.Use(SetUserId)
+	// rename param for event uuid
+	// move group to protected/unprotected
+	// look into nested groups
+	// change line 87 to: event := u.Group to nest inside u
 	event.GET("", controllers.ListEvents)
 	event.POST("", controllers.CreateEvent)
 	event.GET("/:uuid", controllers.GetEvent)

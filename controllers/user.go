@@ -138,7 +138,6 @@ func GetSelfEventList(c echo.Context) error {
 	userId := c.Get("userId").(int)
 	var e []models.EventUser
 	r := DB.Preload("Event").
-		Preload("Event.Creator").
 		Where(&models.EventUser{UserID: userId}).
 		Find(&e)
 	if r.Error != nil {
@@ -154,7 +153,6 @@ func GetUsersEventList(c echo.Context) error {
 
 	var e []models.EventUser
 	r := DB.Preload("Event").
-		Preload("Event.Creator").
 		Where(&models.EventUser{UserID: user.ID}).
 		Find(&e)
 	if r.Error != nil {

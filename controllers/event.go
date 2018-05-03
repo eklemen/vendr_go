@@ -108,6 +108,9 @@ func JoinEvent(c echo.Context) error {
 		return err
 	}
 
+	// for permissions
+	// (user.priv & 2 = 2)  <- if that is true then the user has that permission
+	// check the permission in the event middleware
 	eu := models.EventUser{
 		EventID:          eId,
 		UserID:           u,
