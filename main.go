@@ -36,6 +36,7 @@ func main() {
 		fmt.Println("DB Connected...")
 	}
 	defer db.Close()
+	// TODO: create a struct for these
 	controllers.DB = db
 	middlewares.DB = db
 	db.LogMode(true)
@@ -77,13 +78,13 @@ func main() {
 
 	// User
 	u := e.Group("/api")
-	u.Use(middlewares.SetUserId)
-	u.GET("users", controllers.ListUsers)
-	u.GET("users/:uuid", controllers.GetUser)
-	u.PUT("users/:uuid", controllers.UpdateUser)
-	u.DELETE("users/:uuid", controllers.DeleteUser)
-	u.GET("users/self/events", controllers.GetSelfEventList)
-	u.GET("users/:uuid/events", controllers.GetUsersEventList)
+	u.Use(middlewares.LoadUserIntoContext)
+	u.GET("/users", controllers.ListUsers)
+	u.GET("/users/:uuid", controllers.GetUser)
+	u.PUT("/users/:uuid", controllers.UpdateUser)
+	u.DELETE("/users/:uuid", controllers.DeleteUser)
+	u.GET("/users/self/events", controllers.GetSelfEventList)
+	u.GET("/users/:uuid/events", controllers.GetUsersEventList)
 
 	// Event
 	event := u.Group("/events")

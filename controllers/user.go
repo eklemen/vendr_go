@@ -113,18 +113,14 @@ func UpdateUser(c echo.Context) error {
 	if err := c.Bind(u); err != nil {
 		return err
 	}
-	// update the user and return the full record
+	// update the user
 	DB.Model(&u).Updates(&u)
-	r := DB.Where(&models.User{Uuid: uid}).
+
+	// return the full record after update
+	DB.Where(&models.User{Uuid: uid}).
 		First(&u)
 
-	// can preload nested structs
-	//Preload("CreatedEvents").Preload("CreatedEvents.Creator").
-
-	if r.Error != nil {
-		return r.Error
-	}
-	return c.JSON(http.StatusOK, r.Value)
+	return c.JSON(http.StatusOK, u)
 }
 
 func DeleteUser(c echo.Context) error {

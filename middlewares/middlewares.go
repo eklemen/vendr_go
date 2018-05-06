@@ -10,7 +10,7 @@ import (
 
 var DB *gorm.DB
 
-func SetUserId(next echo.HandlerFunc) echo.HandlerFunc {
+func LoadUserIntoContext(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		usr := c.Get("user").(*jwt.Token)
 		claims := usr.Claims.(jwt.MapClaims)
@@ -22,6 +22,9 @@ func SetUserId(next echo.HandlerFunc) echo.HandlerFunc {
 		u, _ := uuid.FromString(uid)
 		c.Set("uuid", u)
 
+		//var user models.User
+		//DB.First(&user, id)
+		//c.Set("user", u.Value)
 		return next(c)
 	}
 }
