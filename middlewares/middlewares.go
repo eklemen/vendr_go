@@ -1,14 +1,14 @@
-package main
+package middlewares
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"github.com/eklemen/vendr/models"
+	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
 )
 
-type eventId struct {
-	ID int
-}
+var DB *gorm.DB
 
 func SetUserId(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -21,6 +21,7 @@ func SetUserId(next echo.HandlerFunc) echo.HandlerFunc {
 		uid := claims["uuid"].(string)
 		u, _ := uuid.FromString(uid)
 		c.Set("uuid", u)
+
 		return next(c)
 	}
 }
@@ -28,13 +29,10 @@ func SetUserId(next echo.HandlerFunc) echo.HandlerFunc {
 func GetEventIDFromUUID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := c.Param("uuid")
-		if u != "" {
-			uid, _ := uuid.FromString(u)
-			var eventId eventId
-			db.Raw("SELECT id FROM events WHERE uuid = ?", uid).Scan(&eventId)
-			c.Set("eventId", eventId.ID)
-			return next(c)
-		}
+		uid, _ := uuid.FromString(u)
+		e := &models.Event{Uuid: uid}
+		DB.Select([]string{"id"}).Where(&e).Find(&e)
+		c.Set("eventId", e.ID)
 		return next(c)
 	}
 }

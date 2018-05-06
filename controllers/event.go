@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/eklemen/vendr/models"
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
@@ -112,11 +113,19 @@ func JoinEvent(c echo.Context) error {
 	// (user.priv & 2 = 2)  <- if that is true then the user has that permission
 	// check the permission in the event middleware
 	eu := models.EventUser{
-		EventID:          eId,
-		UserID:           u,
-		MemberRole:       memberRole.Role,
-		MemberPermission: "read"}
-	DB.FirstOrCreate(&eu, eu)
+		EventID: eId,
+		UserID:  u}
+	//DB.FirstOrCreate(&eu, eu)
+	if DB.NewRecord(eu) {
+		fmt.Println("NEW RECORD")
+		eu.MemberRole = memberRole.Role
+		eu.MemberPermission = "read"
+		//DB.Create(&eu)
+		return c.JSON(http.StatusOK, "Create this user")
+	} else {
+		fmt.Println("ALREADY MEMBER")
+		return c.JSON(http.StatusTeapot, "User already belongs to this event.")
+	}
 
 	r := DB.Preload("Attendees.User").
 		Preload("Creator").

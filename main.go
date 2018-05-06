@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/eklemen/vendr/controllers"
+	"github.com/eklemen/vendr/middlewares"
 	"github.com/eklemen/vendr/models"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
@@ -36,6 +37,7 @@ func main() {
 	}
 	defer db.Close()
 	controllers.DB = db
+	middlewares.DB = db
 	db.LogMode(true)
 	// Migrate the schema
 	db.AutoMigrate(&models.User{})
@@ -74,23 +76,18 @@ func main() {
 	e.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
 
 	// User
-	u := e.Group("/api/users")
-	u.Use(SetUserId)
-	u.GET("", controllers.ListUsers)
-	u.GET("/:uuid", controllers.GetUser)
-	u.PUT("/:uuid", controllers.UpdateUser)
-	u.DELETE("/:uuid", controllers.DeleteUser)
-	u.GET("/self/events", controllers.GetSelfEventList)
-	u.GET("/:uuid/events", controllers.GetUsersEventList)
+	u := e.Group("/api")
+	u.Use(middlewares.SetUserId)
+	u.GET("users", controllers.ListUsers)
+	u.GET("users/:uuid", controllers.GetUser)
+	u.PUT("users/:uuid", controllers.UpdateUser)
+	u.DELETE("users/:uuid", controllers.DeleteUser)
+	u.GET("users/self/events", controllers.GetSelfEventList)
+	u.GET("users/:uuid/events", controllers.GetUsersEventList)
 
 	// Event
-	event := e.Group("/api/events")
-	event.Use(GetEventIDFromUUID)
-	event.Use(SetUserId)
-	// rename param for event uuid
-	// move group to protected/unprotected
-	// look into nested groups
-	// change line 87 to: event := u.Group to nest inside u
+	event := u.Group("/events")
+	event.Use(middlewares.GetEventIDFromUUID)
 	event.GET("", controllers.ListEvents)
 	event.POST("", controllers.CreateEvent)
 	event.GET("/:uuid", controllers.GetEvent)
