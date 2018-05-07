@@ -153,3 +153,45 @@ func RemoveUserFromEvent(c echo.Context) error {
 
 	return c.NoContent(http.StatusNoContent)
 }
+
+// Each member of an event has a "report" column
+// spam accounts or vendors that were not actually present
+// can be 'reported' by other users
+// too many reports will remove that users from the event
+// TODO: move this struct out to be used by any custom response
+type userStatus struct {
+	Message     string `json:"message"`
+	UserRemoved bool   `json:"userRemoved"`
+}
+
+func ReportUser(c echo.Context) error {
+	status := userStatus{}
+	eId := c.Get("eventId").(int)
+	userUuid, _ := uuid.FromString(c.Param("userUuid"))
+	u := &models.User{Uuid: userUuid}
+	self := c.Get("userId")
+	DB.Select([]string{"id"}).Where(&u).First(&u)
+
+	// Return bad request if the user tries to report themselves
+	if self == u.ID {
+		status.Message = "Incorrect user uuid"
+		status.UserRemoved = false
+		return c.JSON(http.StatusBadRequest, status)
+	}
+
+	eu := &models.EventUser{UserID: u.ID, EventID: eId}
+	DB.Where(&eu).First(&eu)
+
+	if eu.Reports >= 5 {
+		status.Message = "User has been removed from event."
+		status.UserRemoved = true
+		DB.Delete(&eu)
+		return c.JSON(http.StatusOK, status)
+	} else {
+		DB.Model(&eu).Update("reports", eu.Reports+1)
+	}
+
+	status.Message = "User has been reported."
+	status.UserRemoved = false
+	return c.JSON(http.StatusOK, status)
+}
