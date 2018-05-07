@@ -22,9 +22,9 @@ func LoadUserIntoContext(next echo.HandlerFunc) echo.HandlerFunc {
 		u, _ := uuid.FromString(uid)
 		c.Set("uuid", u)
 
-		//var user models.User
-		//DB.First(&user, id)
-		//c.Set("user", u.Value)
+		var user models.User
+		DB.First(&user, id)
+		c.Set("user", user)
 		return next(c)
 	}
 }

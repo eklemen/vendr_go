@@ -126,6 +126,7 @@ func UpdateUser(c echo.Context) error {
 func DeleteUser(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	u := &models.User{Uuid: uid}
+	DB.Where(&u).First(&u)
 	DB.Delete(&u)
 	return c.NoContent(http.StatusNoContent)
 }
@@ -133,13 +134,13 @@ func DeleteUser(c echo.Context) error {
 func GetSelfEventList(c echo.Context) error {
 	userId := c.Get("userId").(int)
 	var e []models.EventUser
-	r := DB.Preload("Event").
+	err := DB.Preload("Event").
 		Where(&models.EventUser{UserID: userId}).
-		Find(&e)
-	if r.Error != nil {
-		return r.Error
+		Find(&e).Error
+	if err != nil {
+		return err
 	}
-	return c.JSON(http.StatusOK, r.Value)
+	return c.JSON(http.StatusOK, e)
 }
 
 func GetUsersEventList(c echo.Context) error {
@@ -148,11 +149,8 @@ func GetUsersEventList(c echo.Context) error {
 	DB.Select([]string{"id"}).Where(&user).First(&user)
 
 	var e []models.EventUser
-	r := DB.Preload("Event").
+	DB.Preload("Event").
 		Where(&models.EventUser{UserID: user.ID}).
 		Find(&e)
-	if r.Error != nil {
-		return r.Error
-	}
-	return c.JSON(http.StatusOK, r.Value)
+	return c.JSON(http.StatusOK, e)
 }

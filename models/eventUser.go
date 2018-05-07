@@ -8,7 +8,8 @@ type (
 		UserID           int    `json:"-"`
 		User             *User  `json:"user,omitempty"`
 		MemberRole       string `json:"memberRole"`
-		MemberPermission string `json:"memberPermission"`
+		MemberPermission int    `json:"memberPermission"`
+		Reports          int    `json:"-";gorm:"default:0"`
 	}
 )
 

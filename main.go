@@ -95,6 +95,7 @@ func main() {
 	event.PUT("/:uuid", controllers.UpdateEvent)
 	event.POST("/:uuid/join", controllers.JoinEvent)
 	event.DELETE("/:uuid", controllers.DeleteEvent)
+	event.DELETE("/:uuid/kick/:userUuid", controllers.RemoveUserFromEvent)
 
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))

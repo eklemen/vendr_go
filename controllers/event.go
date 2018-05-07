@@ -15,13 +15,13 @@ type memberRoleAndPerm struct {
 
 func ListEvents(c echo.Context) error {
 	var e []models.Event
-	r := DB.Preload("Creator").
+	err := DB.Preload("Creator").
 		Preload("Attendees.User").
-		Find(&e)
-	if r.Error != nil {
-		return r.Error
+		Find(&e).Error
+	if err != nil {
+		return err
 	}
-	return c.JSON(http.StatusOK, r.Value)
+	return c.JSON(http.StatusOK, e)
 }
 
 func GetEvent(c echo.Context) error {
@@ -31,12 +31,8 @@ func GetEvent(c echo.Context) error {
 		Preload("Attendees.User").
 		Where(&models.Event{Uuid: uid}).
 		First(&e)
-
 	if r.RecordNotFound() {
 		return c.JSON(http.StatusNotFound, "Record not found")
-	}
-	if r.Error != nil {
-		return r.Error
 	}
 	return c.JSON(http.StatusOK, r.Value)
 }
@@ -56,7 +52,7 @@ func CreateEvent(c echo.Context) error {
 	e.Attendees = []*models.EventUser{
 		{
 			UserID:           userId,
-			MemberPermission: "edit",
+			MemberPermission: 1 | 2,
 			MemberRole:       "vendor",
 		},
 	}
@@ -64,14 +60,14 @@ func CreateEvent(c echo.Context) error {
 	// create the event
 	DB.Set("gorm:association_autoupdate", false).Save(&e)
 
-	r := DB.Preload("Attendees.User").
+	err := DB.Preload("Attendees.User").
 		Preload("Creator").
-		First(&e, e.ID)
-	if r.Error != nil {
-		return r.Error
+		First(&e, e.ID).Error
+	if err != nil {
+		return err
 	}
 
-	return c.JSON(http.StatusCreated, r.Value)
+	return c.JSON(http.StatusCreated, e)
 }
 
 func UpdateEvent(c echo.Context) error {
@@ -81,14 +77,15 @@ func UpdateEvent(c echo.Context) error {
 		return err
 	}
 	DB.Model(&e).Updates(&e)
-	r := DB.Preload("Creator").
+	err := DB.Preload("Creator").
 		Preload("Attendees.User").
 		Where(&models.Event{Uuid: uid}).
-		First(&e)
-	if r.Error != nil {
-		return r.Error
+		First(&e).Error
+	if err != nil {
+		return err
 	}
-	return c.JSON(http.StatusOK, r.Value)
+
+	return c.JSON(http.StatusOK, e)
 }
 
 func DeleteEvent(c echo.Context) error {
@@ -97,6 +94,8 @@ func DeleteEvent(c echo.Context) error {
 	DB.Delete(&e)
 	return c.NoContent(http.StatusNoContent)
 }
+
+// EventUser actions
 
 func JoinEvent(c echo.Context) error {
 	// get eventId and userId from context
@@ -109,30 +108,48 @@ func JoinEvent(c echo.Context) error {
 		return err
 	}
 
-	// for permissions
-	// (user.priv & 2 = 2)  <- if that is true then the user has that permission
-	// check the permission in the event middleware
 	eu := models.EventUser{
 		EventID: eId,
 		UserID:  u}
-	//DB.FirstOrCreate(&eu, eu)
-	if DB.NewRecord(eu) {
+
+	if DB.Where(&eu).First(&eu).RecordNotFound() {
 		fmt.Println("NEW RECORD")
 		eu.MemberRole = memberRole.Role
-		eu.MemberPermission = "read"
-		//DB.Create(&eu)
-		return c.JSON(http.StatusOK, "Create this user")
+		// verify the request has correct 'role'
+		if memberRole.Role == "vendor" {
+			eu.MemberPermission = 2
+		} else if memberRole.Role == "client" {
+			// give a client read and write permissions by default
+			eu.MemberPermission = 1 | 2
+		} else {
+			return c.JSON(http.StatusBadRequest, "Member role must be either 'vendor' or 'client'.")
+		}
+		// create new EventUser relationship row
+		DB.Create(&eu)
 	} else {
-		fmt.Println("ALREADY MEMBER")
-		return c.JSON(http.StatusTeapot, "User already belongs to this event.")
+		return c.JSON(http.StatusBadRequest, "User already belongs to this event.")
 	}
 
-	r := DB.Preload("Attendees.User").
+	// if the join is successful, return that event
+	event := &models.Event{}
+	dbErr := DB.Preload("Attendees.User").
 		Preload("Creator").
-		First(&models.Event{}, eId)
-	if r.Error != nil {
-		return r.Error
+		First(&event, eId).Error
+	if dbErr != nil {
+		return dbErr
 	}
+	return c.JSON(http.StatusOK, event)
+}
 
-	return c.JSON(http.StatusOK, r.Value)
+func RemoveUserFromEvent(c echo.Context) error {
+	eId := c.Get("eventId").(int)
+	userUuid, _ := uuid.FromString(c.Param("userUuid"))
+	u := &models.User{Uuid: userUuid}
+	DB.Select([]string{"id"}).Where(&u).First(&u)
+
+	eu := &models.EventUser{UserID: u.ID, EventID: eId}
+	DB.Where(&eu).First(&eu)
+	DB.Delete(&eu)
+
+	return c.NoContent(http.StatusNoContent)
 }
