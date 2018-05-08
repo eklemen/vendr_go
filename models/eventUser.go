@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type (
 	EventUser struct {
@@ -16,7 +19,35 @@ type (
 	}
 )
 
-//
-//func (*EventUser) TableName() string {
-//	return "event_users"
-//}
+// Permissions
+var (
+	writeEvent  = 1
+	readEvent   = 2
+	deleteEvent = 4
+	addUser     = 8
+	deleteUser  = 16
+)
+
+// User groups
+var administrator = writeEvent | readEvent | deleteEvent | addUser | deleteUser
+var owner = readEvent | writeEvent | deleteEvent | deleteUser
+var editor = writeEvent | readEvent
+var member = readEvent
+
+func (e *EventUser) GrantMember() int {
+	return member
+}
+func (e *EventUser) GrantEditor() int {
+	return editor
+}
+func (e *EventUser) GrantOwner() int {
+	return owner
+}
+
+func (e *EventUser) CanEditEvent() bool {
+	if e.MemberPermission == editor {
+		fmt.Println("-----THE USER CAN EDIT!!!-----")
+		return true
+	}
+	return false
+}

@@ -38,7 +38,12 @@ func GetEvent(c echo.Context) error {
 }
 
 func CreateEvent(c echo.Context) error {
-	e := new(models.Event)
+	//e := new(models.Event)
+	//eu := new(models.EventUser)
+	var (
+		e  = models.Event{}
+		eu = models.EventUser{}
+	)
 
 	// get user id of token bearer
 	userId := c.Get("userId").(int)
@@ -52,7 +57,7 @@ func CreateEvent(c echo.Context) error {
 	e.Attendees = []*models.EventUser{
 		{
 			UserID:           userId,
-			MemberPermission: 1 | 2,
+			MemberPermission: eu.GrantOwner(),
 			MemberRole:       "vendor",
 		},
 	}
@@ -84,7 +89,10 @@ func UpdateEvent(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
+	// get the event users details and check the permission
+	me := c.Get("myEvent").(*models.EventUser)
+	me.CanEditEvent()
+	//fmt.Println(ff)
 	return c.JSON(http.StatusOK, e)
 }
 
@@ -145,7 +153,7 @@ func RemoveUserFromEvent(c echo.Context) error {
 	eId := c.Get("eventId").(int)
 	userUuid, _ := uuid.FromString(c.Param("userUuid"))
 	u := &models.User{Uuid: userUuid}
-	DB.Select([]string{"id"}).Where(&u).First(&u)
+	DB.Select("id").Where(&u).First(&u)
 
 	eu := &models.EventUser{UserID: u.ID, EventID: eId}
 	DB.Where(&eu).First(&eu)
@@ -170,7 +178,7 @@ func ReportUser(c echo.Context) error {
 	userUuid, _ := uuid.FromString(c.Param("userUuid"))
 	u := &models.User{Uuid: userUuid}
 	self := c.Get("userId")
-	DB.Select([]string{"id"}).Where(&u).First(&u)
+	DB.Select("id").Where(&u).First(&u)
 
 	// Return bad request if the user tries to report themselves
 	if self == u.ID {
