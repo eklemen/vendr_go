@@ -78,10 +78,20 @@ func CreateEvent(c echo.Context) error {
 func UpdateEvent(c echo.Context) error {
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	e := &models.Event{Uuid: uid}
+
+	// get the event users details and check the permission
+	i := c.Get("myEvent").(*models.EventUser)
+	if !i.CanEditEvent() {
+		return c.JSON(http.StatusNotFound, "Not found")
+	}
+
+	// else bind the incoming data and update
 	if err := c.Bind(e); err != nil {
 		return err
 	}
 	DB.Model(&e).Updates(&e)
+
+	// get the newly updated record
 	err := DB.Preload("Creator").
 		Preload("Attendees.User").
 		Where(&models.Event{Uuid: uid}).
@@ -89,14 +99,17 @@ func UpdateEvent(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	// get the event users details and check the permission
-	me := c.Get("myEvent").(*models.EventUser)
-	me.CanEditEvent()
-	//fmt.Println(ff)
+
 	return c.JSON(http.StatusOK, e)
 }
 
 func DeleteEvent(c echo.Context) error {
+	// get the event users details and check the permission
+	i := c.Get("myEvent").(*models.EventUser)
+	if !i.CanDeleteEvent() {
+		return c.JSON(http.StatusNotFound, "Not found")
+	}
+
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	e := &models.Event{Uuid: uid}
 	DB.Delete(&e)
@@ -125,10 +138,10 @@ func JoinEvent(c echo.Context) error {
 		eu.MemberRole = memberRole.Role
 		// verify the request has correct 'role'
 		if memberRole.Role == "vendor" {
-			eu.MemberPermission = 2
+			eu.MemberPermission = eu.GrantMember()
 		} else if memberRole.Role == "client" {
 			// give a client read and write permissions by default
-			eu.MemberPermission = 1 | 2
+			eu.MemberPermission = eu.GrantOwner()
 		} else {
 			return c.JSON(http.StatusBadRequest, "Member role must be either 'vendor' or 'client'.")
 		}

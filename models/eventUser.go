@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -25,12 +24,12 @@ var (
 	readEvent   = 2
 	deleteEvent = 4
 	addUser     = 8
-	deleteUser  = 16
+	removeUser  = 16
 )
 
 // User groups
-var administrator = writeEvent | readEvent | deleteEvent | addUser | deleteUser
-var owner = readEvent | writeEvent | deleteEvent | deleteUser
+var administrator = writeEvent | readEvent | deleteEvent | addUser | removeUser
+var owner = readEvent | writeEvent | deleteEvent | removeUser
 var editor = writeEvent | readEvent
 var member = readEvent
 
@@ -45,8 +44,14 @@ func (e *EventUser) GrantOwner() int {
 }
 
 func (e *EventUser) CanEditEvent() bool {
-	if e.MemberPermission == editor {
-		fmt.Println("-----THE USER CAN EDIT!!!-----")
+	if e.MemberPermission&editor == editor {
+		return true
+	}
+	return false
+}
+
+func (e *EventUser) CanDeleteEvent() bool {
+	if e.MemberPermission&owner == owner {
 		return true
 	}
 	return false

@@ -101,16 +101,3 @@ func main() {
 	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
 }
-
-//// Permissions
-//var WriteEvent = 1
-//var readEvent = 2
-//var deleteEvent = 4
-//var addUser = 8
-//var deleteUser = 16
-//
-//// User groups
-//var administrator = WriteEvent | readEvent | deleteEvent | addUser | deleteUser
-//var moderator = readEvent | deleteEvent | deleteUser
-//var writer = WriteEvent | readEvent
-//var guest = readEvent
