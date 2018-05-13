@@ -74,10 +74,10 @@ func main() {
 	// Auth
 	e.GET("/auth/:provider", controllers.AuthInstagram)
 	e.GET("/auth/:provider/callback", controllers.AuthInstagramCB)
-	e.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
 
 	// User
 	u := e.Group("/api")
+	u.Use(middleware.JWT([]byte(os.Getenv("JWT_SECRET"))))
 	u.Use(middlewares.LoadUserIntoContext)
 	u.GET("/users", controllers.ListUsers)
 	u.GET("/users/:uuid", controllers.GetUser)
@@ -85,6 +85,7 @@ func main() {
 	u.DELETE("/users/:uuid", controllers.DeleteUser)
 	u.GET("/users/self/events", controllers.GetSelfEventList)
 	u.GET("/users/:uuid/events", controllers.GetUsersEventList)
+	u.GET("/users/:uuid/contacts", controllers.GetContactList)
 
 	// Event
 	event := u.Group("/events")

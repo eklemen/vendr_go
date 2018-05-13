@@ -20,6 +20,11 @@ type (
 	}
 )
 
+type contacts struct {
+	Uuid     uuid.UUID      `json:"uuid"`
+	Contacts []*models.User `json:"contacts"`
+}
+
 func ListUsers(c echo.Context) error {
 	var users []models.User
 	r := DB.Find(&users)
@@ -30,7 +35,7 @@ func ListUsers(c echo.Context) error {
 }
 
 func GetUser(c echo.Context) error {
-	u := new(models.User)
+	u := models.NewUser()
 	uid, _ := uuid.FromString(c.Param("uuid"))
 	r := DB.Preload("CreatedEvents").
 		Where(&models.User{Uuid: uid}).
@@ -153,4 +158,24 @@ func GetUsersEventList(c echo.Context) error {
 		Where(&models.EventUser{UserID: user.ID}).
 		Find(&e)
 	return c.JSON(http.StatusOK, e)
+}
+
+func GetContactList(c echo.Context) error {
+	var (
+		uid uuid.UUID
+		u   *models.User
+		err error
+		r   *contacts
+	)
+	uid, _ = uuid.FromString(c.Param("uuid"))
+	u = &models.User{Uuid: uid, ContactList: []*models.User{}}
+	err = DB.Preload("ContactList").First(&u).Error
+	if err != nil {
+		return err
+	}
+	r = &contacts{
+		Contacts: u.ContactList,
+		Uuid:     uid,
+	}
+	return c.JSON(http.StatusOK, r)
 }

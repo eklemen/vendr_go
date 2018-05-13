@@ -19,11 +19,14 @@ type (
 		DeletedAt       *time.Time   `json:"-"`
 		CreatedEvents   []*Event     `json:"createdEvents,omitempty" gorm:"foreignkey:CreatorID"`
 		EventsAttending []*EventUser `json:"eventsAttending,omitempty"`
+		ContactList     []*User      `json:"contacts" gorm:"many2many:contacts;association_jointable_foreignkey:contact_id"`
 	}
 )
 
 func NewUser() *User {
 	return &User{
-		CreatedEvents: []*Event{},
+		CreatedEvents:   []*Event{},
+		EventsAttending: []*EventUser{},
+		ContactList:     []*User{},
 	}
 }

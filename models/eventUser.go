@@ -20,8 +20,8 @@ type (
 
 // Permissions
 var (
-	writeEvent  = 1
-	readEvent   = 2
+	readEvent   = 1
+	writeEvent  = 2
 	deleteEvent = 4
 	addUser     = 8
 	removeUser  = 16
