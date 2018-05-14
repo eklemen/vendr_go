@@ -86,6 +86,7 @@ func main() {
 	u.GET("/users/self/events", controllers.GetSelfEventList)
 	u.GET("/users/:uuid/events", controllers.GetUsersEventList)
 	u.GET("/users/:uuid/contacts", controllers.GetContactList)
+	u.POST("/users/:uuid/addContact", controllers.AddContact)
 
 	// Event
 	event := u.Group("/events")

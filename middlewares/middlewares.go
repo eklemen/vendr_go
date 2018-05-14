@@ -23,9 +23,9 @@ func LoadUserIntoContext(next echo.HandlerFunc) echo.HandlerFunc {
 		uid, _ := uuid.FromString(claims["uuid"].(string))
 		c.Set("uuid", uid)
 
-		//var user models.User
-		//DB.First(&user, id)
-		//c.Set("user", user)
+		user := models.User{}
+		DB.First(&user, id)
+		c.Set("user", user)
 		return next(c)
 	}
 }

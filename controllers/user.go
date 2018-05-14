@@ -149,11 +149,15 @@ func GetSelfEventList(c echo.Context) error {
 }
 
 func GetUsersEventList(c echo.Context) error {
-	uid, _ := uuid.FromString(c.Param("uuid"))
-	user := &models.User{Uuid: uid}
+	var (
+		uid  uuid.UUID
+		user *models.User
+		e    []models.EventUser
+	)
+	uid, _ = uuid.FromString(c.Param("uuid"))
+	user = &models.User{Uuid: uid}
 	DB.Select("id").Where(&user).First(&user)
 
-	var e []models.EventUser
 	DB.Preload("Event").
 		Where(&models.EventUser{UserID: user.ID}).
 		Find(&e)
@@ -164,18 +168,42 @@ func GetContactList(c echo.Context) error {
 	var (
 		uid uuid.UUID
 		u   *models.User
-		err error
-		r   *contacts
+		l   *contacts
 	)
 	uid, _ = uuid.FromString(c.Param("uuid"))
 	u = &models.User{Uuid: uid, ContactList: []*models.User{}}
-	err = DB.Preload("ContactList").First(&u).Error
+	r := DB.Preload("ContactList").
+		Where(&models.User{Uuid: uid}).
+		First(&u)
+	if r.RecordNotFound() {
+		return c.JSON(http.StatusNotFound, "Record not found")
+	}
+	if r.Error != nil {
+		return r.Error
+	}
+	l = &contacts{
+		Contacts: u.ContactList,
+		Uuid:     u.Uuid,
+	}
+	return c.JSON(http.StatusOK, l)
+}
+
+func AddContact(c echo.Context) error {
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	contact := models.User{Uuid: uid}
+	err := DB.Where(&contact).First(&contact).Error
 	if err != nil {
 		return err
 	}
-	r = &contacts{
-		Contacts: u.ContactList,
-		Uuid:     uid,
+	userId := c.Get("userId").(int)
+	user := models.User{ID: userId}
+	uerr := DB.First(&user).Error
+	if uerr != nil {
+		return uerr
 	}
-	return c.JSON(http.StatusOK, r)
+
+	DB.Model(&user).
+		Association("ContactList").
+		Append(&contact)
+	return c.JSON(http.StatusOK, user.ContactList)
 }
