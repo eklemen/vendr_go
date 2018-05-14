@@ -20,11 +20,6 @@ type (
 	}
 )
 
-type contacts struct {
-	Uuid     uuid.UUID      `json:"uuid"`
-	Contacts []*models.User `json:"contacts"`
-}
-
 func ListUsers(c echo.Context) error {
 	var users []models.User
 	r := DB.Find(&users)
@@ -168,7 +163,6 @@ func GetContactList(c echo.Context) error {
 	var (
 		uid uuid.UUID
 		u   *models.User
-		l   *contacts
 	)
 	uid, _ = uuid.FromString(c.Param("uuid"))
 	u = &models.User{Uuid: uid, ContactList: []*models.User{}}
@@ -181,11 +175,8 @@ func GetContactList(c echo.Context) error {
 	if r.Error != nil {
 		return r.Error
 	}
-	l = &contacts{
-		Contacts: u.ContactList,
-		Uuid:     u.Uuid,
-	}
-	return c.JSON(http.StatusOK, l)
+
+	return c.JSON(http.StatusOK, u.ContactList)
 }
 
 func AddContact(c echo.Context) error {
@@ -205,5 +196,6 @@ func AddContact(c echo.Context) error {
 	DB.Model(&user).
 		Association("ContactList").
 		Append(&contact)
+
 	return c.JSON(http.StatusOK, user.ContactList)
 }
