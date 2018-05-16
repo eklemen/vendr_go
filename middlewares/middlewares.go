@@ -23,9 +23,12 @@ func LoadUserIntoContext(next echo.HandlerFunc) echo.HandlerFunc {
 		uid, _ := uuid.FromString(claims["uuid"].(string))
 		c.Set("uuid", uid)
 
-		user := models.User{}
-		DB.First(&user, id)
-		c.Set("user", user)
+		//user := models.User{}
+		//err := DB.First(&user, id).Error
+		//if err != nil {
+		//	c.JSON(http.StatusNotFound, "Not found")
+		//}
+		//c.Set("user", user)
 		return next(c)
 	}
 }

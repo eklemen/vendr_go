@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
@@ -19,6 +20,10 @@ type (
 		Token string      `json:"token"`
 	}
 )
+
+/////////////////////////////////
+// User direct actions
+/////////////////////////////////
 
 func ListUsers(c echo.Context) error {
 	var users []models.User
@@ -46,14 +51,12 @@ func GetUser(c echo.Context) error {
 }
 
 func CreateUser(c echo.Context, user goth.User) error {
-	//u := new(User) equivalent to line below
+	fmt.Println("-----r", user)
 	u := models.NewUser()
 
 	// Search for existing user
 	u.IgID = user.UserID
 	u.IgUsername = user.NickName
-	// Can this be shortened to
-	// DB.First(&u) ?
 	f := DB.Where(
 		&models.User{
 			IgID:       u.IgID,
@@ -98,7 +101,10 @@ func CreateUser(c echo.Context, user goth.User) error {
 			Token: t,
 			User:  f.Value,
 		}
-		return c.JSON(http.StatusOK, nu)
+		//w := c.Response().Writer
+		//r := c.Request()
+		//http.Redirect(w, r, "http://localhost:3000/login", 302)
+		return c.JSON(http.StatusFound, nu)
 	}
 }
 
@@ -131,6 +137,9 @@ func DeleteUser(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+/////////////////////////////////
+// A User's events via EventUser
+/////////////////////////////////
 func GetSelfEventList(c echo.Context) error {
 	userId := c.Get("userId").(int)
 	var e []models.EventUser
@@ -159,6 +168,9 @@ func GetUsersEventList(c echo.Context) error {
 	return c.JSON(http.StatusOK, e)
 }
 
+/////////////////////////////////
+// Users contacts (address book)
+/////////////////////////////////
 func GetContactList(c echo.Context) error {
 	var (
 		uid uuid.UUID
@@ -197,5 +209,27 @@ func AddContact(c echo.Context) error {
 		Association("ContactList").
 		Append(&contact)
 
+	return c.JSON(http.StatusOK, user.ContactList)
+}
+
+func RemoveContact(c echo.Context) error {
+	userId := c.Get("userId").(int)
+	user := &models.User{ID: userId, ContactList: []*models.User{}}
+	uid, _ := uuid.FromString(c.Param("uuid"))
+	contact := models.User{Uuid: uid}
+	cerr := DB.First(&contact).Error
+	if cerr != nil {
+		return cerr
+	}
+	DB.Model(&user).Association("ContactList").Delete(&contact)
+
+	count := DB.Model(&user).Association("ContactList").Count()
+	if count == 0 {
+		return c.JSON(http.StatusOK, []*models.User{})
+	}
+	err := DB.Preload("ContactList").First(&user).Error
+	if err != nil {
+		return err
+	}
 	return c.JSON(http.StatusOK, user.ContactList)
 }

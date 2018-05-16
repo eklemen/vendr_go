@@ -50,6 +50,11 @@ func main() {
 	// Middlewares
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+	//e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	//	AllowOrigins: []string{"http://localhost", "https://api.instagram.com"},
+	//	AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	//}))
 
 	// Authentication strategies
 	key := os.Getenv("GOTH_SESSION_SECRET")
@@ -83,10 +88,13 @@ func main() {
 	u.GET("/users/:uuid", controllers.GetUser)
 	u.PUT("/users/:uuid", controllers.UpdateUser)
 	u.DELETE("/users/:uuid", controllers.DeleteUser)
+	// user's events
 	u.GET("/users/self/events", controllers.GetSelfEventList)
 	u.GET("/users/:uuid/events", controllers.GetUsersEventList)
+	// contacts
 	u.GET("/users/:uuid/contacts", controllers.GetContactList)
-	u.POST("/users/:uuid/addContact", controllers.AddContact)
+	u.POST("/users/:uuid/contacts", controllers.AddContact)
+	u.DELETE("/users/:uuid/contacts", controllers.RemoveContact)
 
 	// Event
 	event := u.Group("/events")
