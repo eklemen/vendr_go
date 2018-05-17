@@ -24,6 +24,7 @@ func AuthInstagramCB(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	u := CreateUser(c, user)
-	return u
+	CreateUser(c, user)
+	return c.Redirect(302, "http://localhost:3000/dashboard")
+	//return u
 }

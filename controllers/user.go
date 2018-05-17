@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 	"net/http"
 	"os"
+	"time"
 )
 
 var DB *gorm.DB
@@ -53,6 +54,8 @@ func GetUser(c echo.Context) error {
 func CreateUser(c echo.Context, user goth.User) error {
 	fmt.Println("-----r", user)
 	u := models.NewUser()
+	//res := c.Response().Writer
+	//req := c.Request()
 
 	// Search for existing user
 	u.IgID = user.UserID
@@ -70,6 +73,10 @@ func CreateUser(c echo.Context, user goth.User) error {
 	// Set claims (the DB id is encoded below)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["uuid"] = uid
+
+	cookie := new(http.Cookie)
+	cookie.Name = "vendrToken"
+	cookie.Expires = time.Now().Add(24 * time.Hour)
 
 	if f.RecordNotFound() {
 		u.Uuid = uid
@@ -90,6 +97,9 @@ func CreateUser(c echo.Context, user goth.User) error {
 			Token: t,
 			User:  u,
 		}
+		cookie.Value = t
+		c.SetCookie(cookie)
+		//http.Redirect(res, req, "http://localhost:3000/dashboard", 302)
 		return c.JSON(http.StatusCreated, &nu)
 	} else {
 		claims["id"] = u.ID
@@ -101,9 +111,9 @@ func CreateUser(c echo.Context, user goth.User) error {
 			Token: t,
 			User:  f.Value,
 		}
-		//w := c.Response().Writer
-		//r := c.Request()
-		//http.Redirect(w, r, "http://localhost:3000/login", 302)
+		cookie.Value = t
+		c.SetCookie(cookie)
+		//http.Redirect(res, req, "http://localhost:3000/dashboard", 302)
 		return c.JSON(http.StatusFound, nu)
 	}
 }
