@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/eklemen/vendr/models"
 	"github.com/jinzhu/gorm"
@@ -52,10 +51,7 @@ func GetUser(c echo.Context) error {
 }
 
 func CreateUser(c echo.Context, user goth.User) error {
-	fmt.Println("-----r", user)
 	u := models.NewUser()
-	//res := c.Response().Writer
-	//req := c.Request()
 
 	// Search for existing user
 	u.IgID = user.UserID
@@ -77,6 +73,9 @@ func CreateUser(c echo.Context, user goth.User) error {
 	cookie := new(http.Cookie)
 	cookie.Name = "vendrToken"
 	cookie.Expires = time.Now().Add(24 * time.Hour)
+	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	cookie.Value = t
+	c.SetCookie(cookie)
 
 	if f.RecordNotFound() {
 		u.Uuid = uid
@@ -89,32 +88,16 @@ func CreateUser(c echo.Context, user goth.User) error {
 		DB.Create(&u)
 		// Generate encoded token and send it as response.
 		claims["id"] = u.ID
-		t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 		if err != nil {
 			return err
 		}
-		nu := &createdUser{
-			Token: t,
-			User:  u,
-		}
-		cookie.Value = t
-		c.SetCookie(cookie)
-		//http.Redirect(res, req, "http://localhost:3000/dashboard", 302)
-		return c.JSON(http.StatusCreated, &nu)
+		return c.Redirect(302, "http://localhost:3000/dashboard?token="+t)
 	} else {
 		claims["id"] = u.ID
-		t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 		if err != nil {
 			return err
 		}
-		nu := &createdUser{
-			Token: t,
-			User:  f.Value,
-		}
-		cookie.Value = t
-		c.SetCookie(cookie)
-		//http.Redirect(res, req, "http://localhost:3000/dashboard", 302)
-		return c.JSON(http.StatusFound, nu)
+		return c.Redirect(302, "http://localhost:3000/dashboard?token="+t)
 	}
 }
 

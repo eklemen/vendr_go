@@ -13,6 +13,7 @@ type (
 		User             *User      `json:"user,omitempty"`
 		MemberRole       string     `json:"memberRole"`
 		MemberPermission int        `json:"memberPermission"`
+		Service          string     `json:"service"`
 		Reports          int        `json:"-";gorm:"default:0"`
 		DeletedAt        *time.Time `json:"-"`
 	}

@@ -2,15 +2,15 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/eklemen/vendr/models"
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
 	"net/http"
 )
 
-type memberRoleAndPerm struct {
-	Role string `json:"role"`
+type memberRoleAndService struct {
+	Role    string `json:"role"`
+	Service string `json:"service"`
 }
 
 func ListEvents(c echo.Context) error {
@@ -123,8 +123,8 @@ func JoinEvent(c echo.Context) error {
 	eId := c.Get("eventId").(int)
 	u := c.Get("userId").(int)
 	// Decode the request body and grab the role
-	var memberRole memberRoleAndPerm
-	err := json.NewDecoder(c.Request().Body).Decode(&memberRole)
+	var reqBody memberRoleAndService
+	err := json.NewDecoder(c.Request().Body).Decode(&reqBody)
 	if err != nil {
 		return err
 	}
@@ -134,12 +134,13 @@ func JoinEvent(c echo.Context) error {
 		UserID:  u}
 
 	if DB.Where(&eu).First(&eu).RecordNotFound() {
-		fmt.Println("NEW RECORD")
-		eu.MemberRole = memberRole.Role
+		eu.MemberRole = reqBody.Role
+		eu.Service = reqBody.Service
+		//eu.Service =
 		// verify the request has correct 'role'
-		if memberRole.Role == "vendor" {
+		if reqBody.Role == "vendor" {
 			eu.MemberPermission = eu.GrantMember()
-		} else if memberRole.Role == "client" {
+		} else if reqBody.Role == "client" {
 			// give a client read and write permissions by default
 			eu.MemberPermission = eu.GrantOwner()
 		} else {
